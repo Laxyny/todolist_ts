@@ -80,6 +80,25 @@ app.delete('/api/todos/:id', async (req, res) => {
     }
 });
 
+app.put('/api/todos/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, description, completed } = req.body;
+
+        const updateData: any = {};
+        if (title !== undefined) updateData.title = title;
+        if (description !== undefined) updateData.description = description;
+        if (completed !== undefined) updateData.completed = completed;
+
+        await TodoService.updateTodo(id, updateData);
+        const updatedTodo = await TodoService.getTodoById(id);
+        res.json(updatedTodo);
+    } catch (error: any) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+
 app.listen(port, () => {
     console.log(`Serveur démarré sur http://localhost:${port}`);
 }); 

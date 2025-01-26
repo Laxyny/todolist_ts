@@ -4,24 +4,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TodoList App</title>
+    <title>TodoList</title>
 </head>
 
 <body>
     <h1>Bienvenue sur votre TodoList</h1>
 
-    <!-- Formulaire pour ajouter une todo -->
+    <!-- Formulaire pour ajouter un todo -->
     <form id="addTodoForm">
-        <h2>Ajouter une Todo</h2>
+        <h2>Ajouter un Todo</h2>
         <input type="text" id="title" placeholder="Titre" required>
         <input type="text" id="description" placeholder="Description" required>
         <button type="submit">Ajouter</button>
     </form>
 
+    <!-- Formulaire pour modifier un todo -->
+    <form id="editTodoForm" style="display: none;">
+        <h2>Modifier un Todo</h2>
+        <input type="text" id="editTitle" placeholder="Titre" required>
+        <input type="text" id="editDescription" placeholder="Description" required>
+        <input type="hidden" id="editTodoId">
+        <button type="submit">Modifier</button>
+        <button type="button" id="cancelEditButton">Annuler</button>
+    </form>
+
+
     <!-- Liste des todos -->
     <h2>Vos Todos</h2>
     <ul id="todoList">
-        <!-- Les todos seront ajoutées ici via JavaScript -->
     </ul>
 
     <!-- Bouton déconnexion -->

@@ -66,16 +66,25 @@ async function fetchTodos() {
         todos.forEach(todo => {
             const li = document.createElement('li');
             li.textContent = `${todo.title} - ${todo.description}`;
+            li.style.textDecoration = todo.completed ? 'line-through' : 'none';
 
+            // Bouton Modifier
+            const editButton = document.createElement('button');
+            editButton.textContent = 'Modifier';
+            editButton.addEventListener('click', () => showEditForm(todo));
+
+            // Bouton Terminer/Reprendre
+            const toggleButton = document.createElement('button');
+            toggleButton.textContent = todo.completed ? 'Reprendre' : 'Terminer';
+            toggleButton.addEventListener('click', () => toggleTodoStatus(todo));
+
+            // Bouton Supprimer
             const deleteButton = document.createElement('button');
             deleteButton.textContent = 'Supprimer';
             deleteButton.addEventListener('click', () => deleteTodo(todo.id));
 
-            const updateButton = document.createElement('button');
-            updateButton.textContent = 'Marquer comme terminé';
-            updateButton.addEventListener('click', () => updateTodo(todo.id));
-
-            li.appendChild(updateButton);
+            li.appendChild(editButton);
+            li.appendChild(toggleButton);
             li.appendChild(deleteButton);
             todoList.appendChild(li);
         });
@@ -119,13 +128,48 @@ async function deleteTodo(id) {
     }
 }
 
-// Fonction pour mettre à jour une todo
-async function updateTodo(id) {
+// Fonction pour modifier une todo
+async function editTodo(id, updatedTodo) {
     try {
         await fetch(`${API_URL}/todos/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ completed: true })
+            body: JSON.stringify(updatedTodo)
+        });
+        fetchTodos();
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+// Fonction pour afficher le formulaire de modification
+function showEditForm(todo) {
+    const editForm = document.getElementById('editTodoForm');
+    editForm.style.display = 'block';
+    document.getElementById('editTitle').value = todo.title;
+    document.getElementById('editDescription').value = todo.description;
+    document.getElementById('editTodoId').value = todo.id;
+}
+
+// Gérer la soumission du formulaire de modification
+document.getElementById('editTodoForm')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const id = document.getElementById('editTodoId').value;
+    const updatedTodo = {
+        title: document.getElementById('editTitle').value,
+        description: document.getElementById('editDescription').value
+    };
+    editTodo(id, updatedTodo);
+    document.getElementById('editTodoForm').style.display = 'none';
+});
+
+// Fonction pour basculer le statut d'une todo
+async function toggleTodoStatus(todo) {
+    try {
+        await fetch(`${API_URL}/todos/${todo.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ completed: !todo.completed })
         });
         fetchTodos();
     } catch (err) {
