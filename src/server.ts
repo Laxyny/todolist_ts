@@ -2,12 +2,16 @@ import express from 'express';
 import cors from 'cors';
 import { AuthService } from './services/authService';
 import { TodoService } from './services/todoService';
+import path from 'path';
 
 const app = express();
 const port = 3001;
 
 app.use(cors());
 app.use(express.json());
+
+// Middleware
+app.use(express.static(path.join(__dirname, '../public')));
 
 app.post('/api/auth/register', async (req, res) => {
     try {
