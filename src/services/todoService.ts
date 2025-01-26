@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { Todo } from '../types/Todo';
+import { Timestamp } from 'firebase/firestore';
 
 export class TodoService {
     private static COLLECTION_NAME = 'todos';
@@ -18,8 +19,8 @@ export class TodoService {
     static async createTodo(todo: Omit<Todo, 'id'>): Promise<Todo> {
         const docRef = await addDoc(collection(db, this.COLLECTION_NAME), {
             ...todo,
-            createdAt: new Date(),
-            updatedAt: new Date()
+            createdAt: Timestamp.fromDate(new Date()),
+            updatedAt: Timestamp.fromDate(new Date())
         });
 
         return {
