@@ -41,6 +41,7 @@ document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
         if (response.ok) {
             const user = await response.json();
             localStorage.setItem('userId', user.uid);
+            localStorage.setItem('token', user.token);
             window.location.href = '/index.html';
         } else {
             const error = await response.json();
@@ -55,12 +56,29 @@ document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
 // Fonction pour récupérer et afficher les todos
 async function fetchTodos() {
     const userId = localStorage.getItem('userId');
-    if (!userId) return;
+    const token = localStorage.getItem('token');
+    if (!userId || !token) {
+        console.log("Utilisateur non connecté ou token manquant");
+        return;
+    };
 
     try {
-        const response = await fetch(`${API_URL}/todos/${userId}`);
-        const todos = await response.json();
+        const response = await fetch(`${API_URL}/todos/${userId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
 
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Erreur API:", errorData);
+            return;
+
+        }
+
+        const todos = await response.json();
         const todoList = document.getElementById('todoList');
         todoList.innerHTML = '';
         todos.forEach(todo => {
@@ -93,17 +111,21 @@ async function fetchTodos() {
     }
 }
 
-// Fonction pour ajouter une todo
+// Fonction pour ajouter un todo
 document.getElementById('addTodoForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const title = document.getElementById('title').value;
     const description = document.getElementById('description').value;
     const userId = localStorage.getItem('userId');
+    const token = localStorage.getItem('token');
 
     try {
         const response = await fetch(`${API_URL}/todos`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify({ title, description, completed: false, userId })
         });
 
@@ -120,8 +142,14 @@ document.getElementById('addTodoForm')?.addEventListener('submit', async (e) => 
 
 // Fonction pour supprimer une todo
 async function deleteTodo(id) {
+    const token = localStorage.getItem('token');
     try {
-        await fetch(`${API_URL}/todos/${id}`, { method: 'DELETE' });
+        await fetch(`${API_URL}/todos/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
         fetchTodos();
     } catch (err) {
         console.error(err);
@@ -130,10 +158,14 @@ async function deleteTodo(id) {
 
 // Fonction pour modifier une todo
 async function editTodo(id, updatedTodo) {
+    const token = localStorage.getItem('token');
     try {
         await fetch(`${API_URL}/todos/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify(updatedTodo)
         });
         fetchTodos();
@@ -165,10 +197,14 @@ document.getElementById('editTodoForm')?.addEventListener('submit', (e) => {
 
 // Fonction pour basculer le statut d'une todo
 async function toggleTodoStatus(todo) {
+    const token = localStorage.getItem('token');
     try {
         await fetch(`${API_URL}/todos/${todo.id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify({ completed: !todo.completed })
         });
         fetchTodos();
