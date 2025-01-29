@@ -3,6 +3,17 @@ import cors from 'cors';
 import { AuthService } from './services/authService';
 import { TodoService } from './services/todoService';
 import path from 'path';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
+
+declare module 'express-serve-static-core' {
+    interface Request {
+        user?: {
+            uid: string;
+            email: string;
+            displayName?: string;
+        };
+    }
+}
 
 const app = express();
 const port = 3001;
@@ -13,7 +24,35 @@ app.use(express.json());
 // Middleware
 app.use(express.static(path.join(__dirname, '../public')));
 
-app.post('/api/auth/register', async (req, res) => {
+// Middleware pour vérifier l'authentification
+function isAuthenticated(
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+): void {
+    const token = req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+        res.status(401).json({ message: 'Vous devez vous connecter pour accéder à cette ressource' });
+        return;
+    }
+
+    AuthService.verifyToken(token)
+        .then((user) => {
+            if (!user) {
+                res.status(401).json({ message: 'Token invalide' });
+                return;
+            }
+            req.user = user;
+            next(); // Passe à la route suivante
+        })
+        .catch((error) => {
+            console.error('Erreur d’authentification:', error);
+            res.status(500).json({ message: 'Erreur serveur' });
+        });
+}
+
+app.post('/api/auth/register', async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body;
         const user = await AuthService.signUp(email, password);
@@ -23,7 +62,7 @@ app.post('/api/auth/register', async (req, res) => {
     }
 });
 
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body;
         const user = await AuthService.signIn(email, password);
@@ -33,7 +72,7 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
-app.post('/api/auth/logout', async (req, res) => {
+app.post('/api/auth/logout', async (req: Request, res: Response) => {
     try {
         await AuthService.signOut();
         res.json({ message: 'Déconnecté avec succès' });
@@ -43,7 +82,7 @@ app.post('/api/auth/logout', async (req, res) => {
 });
 
 // Routes des todos
-app.get('/api/todos/:userId', async (req, res) => {
+app.get('/api/todos/:userId', isAuthenticated, async (req: Request, res: Response) => {
     try {
         const todos = await TodoService.getTodosByUserId(req.params.userId);
         res.json(todos);
@@ -52,7 +91,7 @@ app.get('/api/todos/:userId', async (req, res) => {
     }
 });
 
-app.post('/api/todos', async (req, res) => {
+app.post('/api/todos', isAuthenticated, async (req: Request, res: Response) => {
     try {
         const todo = await TodoService.createTodo(req.body);
         res.json(todo);
@@ -61,7 +100,7 @@ app.post('/api/todos', async (req, res) => {
     }
 });
 
-app.put('/api/todos/:id', async (req, res) => {
+app.put('/api/todos/:id', isAuthenticated, async (req: Request, res: Response) => {
     try {
         await TodoService.updateTodo(req.params.id, req.body);
         const updatedTodo = await TodoService.getTodoById(req.params.id);
@@ -71,7 +110,7 @@ app.put('/api/todos/:id', async (req, res) => {
     }
 });
 
-app.delete('/api/todos/:id', async (req, res) => {
+app.delete('/api/todos/:id', isAuthenticated, async (req: Request, res: Response) => {
     try {
         await TodoService.deleteTodo(req.params.id);
         res.json({ message: 'Todo supprimée avec succès' });
@@ -80,7 +119,7 @@ app.delete('/api/todos/:id', async (req, res) => {
     }
 });
 
-app.put('/api/todos/:id', async (req, res) => {
+app.put('/api/todos/:id', isAuthenticated, async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
         const { title, description, completed } = req.body;
