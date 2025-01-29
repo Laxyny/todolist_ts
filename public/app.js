@@ -5,12 +5,13 @@ document.getElementById('registerForm')?.addEventListener('submit', async (e) =>
     e.preventDefault();
     const email = document.getElementById('registerEmail').value;
     const password = document.getElementById('registerPassword').value;
+    const displayName = document.getElementById('registerDisplayName').value;
 
     try {
         const response = await fetch(`${API_URL}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ email, password, displayName })
         });
 
         if (response.ok) {
@@ -42,6 +43,7 @@ document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
             const user = await response.json();
             localStorage.setItem('userId', user.uid);
             localStorage.setItem('token', user.token);
+            localStorage.setItem('displayName', user.displayName)
             window.location.href = '/index.html';
         } else {
             const error = await response.json();
@@ -57,11 +59,17 @@ document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
 async function fetchTodos() {
     const userId = localStorage.getItem('userId');
     const token = localStorage.getItem('token');
+    const displayName = localStorage.getItem('displayName') ?? 'Null';
     if (!userId || !token) {
         console.log('Utilisateur non connecté ou token manquant');
         window.location.href = '/login.html';
         return;
     };
+
+    //Afficher le displayName
+    const displayNameH2 = document.getElementById('displayNameH2');
+    displayNameH2.textContent = `Connecté en tant que ${displayName}`;
+
 
     try {
         const response = await fetch(`${API_URL}/todos/${userId}`, {
@@ -185,7 +193,7 @@ function showEditForm(todo) {
 }
 
 //Si le bouton annulé est cliqué alors ne rien modifier et retirer le form document.getElementById('cancelEditButton')
-document.getElementById('cancelEditButton').addEventListener('click', function() {
+document.getElementById('cancelEditButton').addEventListener('click', function () {
     document.getElementById('editTodoForm').style.display = 'none';
 });
 
@@ -237,6 +245,7 @@ function filterTodos(filterType) {
 document.getElementById('logoutButton')?.addEventListener('click', () => {
     localStorage.removeItem('userId');
     localStorage.removeItem('token');
+    localStorage.removeItem('displayName');
     localStorage.clear();
     window.location.href = '/login.html';
 });

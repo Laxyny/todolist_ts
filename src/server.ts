@@ -64,8 +64,8 @@ function isAuthenticated(
 
 app.post('/api/auth/register', async (req: Request, res: Response) => {
     try {
-        const { email, password } = req.body;
-        const user = await AuthService.signUp(email, password);
+        const { email, password, displayName } = req.body;
+        const user = await AuthService.signUp(email, password, displayName);
         res.json(user);
     } catch (error: any) {
         res.status(400).json({ error: error.message });

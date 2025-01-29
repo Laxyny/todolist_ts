@@ -2,11 +2,14 @@ import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     signOut as firebaseSignOut,
-    User as FirebaseUser
+    User as FirebaseUser,
+    updateProfile
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { User } from '../types/User';
 import admin from 'firebase-admin';
+import { db } from "../config/firebase";
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 var serviceAccount = require("./serviceAccountKey.json");
 
 // Initialisation de Firebase Admin SDK
@@ -17,12 +20,24 @@ if (!admin.apps.length) {
 }
 
 export class AuthService {
-    static async signUp(email: string, password: string): Promise<User> {
+    static async signUp(email: string, password: string, displayName: string): Promise<User> {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        await updateProfile(user, { displayName });
+
+        const userRef = doc(db, "users", user.uid);
+        await setDoc(userRef, {
+            uid: user.uid,
+            email: user.email!,
+            displayName: displayName,
+            createdAt: serverTimestamp() 
+        });
+        
         return {
             uid: userCredential.user.uid,
             email: userCredential.user.email!,
-            displayName: userCredential.user.displayName || undefined
+            displayName: userCredential.user.displayName || ''
         };
     }
 
@@ -34,7 +49,7 @@ export class AuthService {
         return {
             uid: userCredential.user.uid,
             email: userCredential.user.email!,
-            displayName: userCredential.user.displayName || undefined,
+            displayName: userCredential.user.displayName || '',
             token
         };
     }
@@ -50,7 +65,7 @@ export class AuthService {
         return {
             uid: user.uid,
             email: user.email!,
-            displayName: user.displayName || undefined,
+            displayName: user.displayName || ''
         };
     }
 
@@ -60,7 +75,7 @@ export class AuthService {
             return {
                 uid: decodedToken.uid,
                 email: decodedToken.email!,
-                displayName: decodedToken.name || undefined,
+                displayName: decodedToken.name
             };
         } catch (error) {
             console.error('Erreur de vérification du token:', error);

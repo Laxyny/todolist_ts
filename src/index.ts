@@ -5,7 +5,7 @@ async function main() {
     try {
         // Test d'inscription
         console.log('Test d\'inscription...');
-        const user = await AuthService.signUp('test@example.com', 'password123');
+        const user = await AuthService.signUp('test@test.com', 'Test123456', 'Utilisateur');
         console.log('Utilisateur créé:', user);
 
         // Test de création d'une todo
