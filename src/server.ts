@@ -24,6 +24,16 @@ app.use(express.json());
 // Middleware
 app.use(express.static(path.join(__dirname, '../public')));
 
+//Bloquer l'accès à la racine qui redirige vers index.html si l'utilisateur n'est pas connecté
+app.get('/', (req: Request, res: Response) => {
+    if (!req.user) {
+        console.log('Utilisateur non connecté');
+        res.redirect('/login');
+        return
+    }
+    res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
 // Middleware pour vérifier l'authentification
 function isAuthenticated(
     req: express.Request,

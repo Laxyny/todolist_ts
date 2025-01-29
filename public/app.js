@@ -58,7 +58,8 @@ async function fetchTodos() {
     const userId = localStorage.getItem('userId');
     const token = localStorage.getItem('token');
     if (!userId || !token) {
-        console.log("Utilisateur non connecté ou token manquant");
+        console.log('Utilisateur non connecté ou token manquant');
+        window.location.href = '/login.html';
         return;
     };
 
@@ -183,8 +184,14 @@ function showEditForm(todo) {
     document.getElementById('editTodoId').value = todo.id;
 }
 
+//Si le bouton annulé est cliqué alors ne rien modifier et retirer le form document.getElementById('cancelEditButton')
+document.getElementById('cancelEditButton').addEventListener('click', function() {
+    document.getElementById('editTodoForm').style.display = 'none';
+});
+
 // Gérer la soumission du formulaire de modification
 document.getElementById('editTodoForm')?.addEventListener('submit', (e) => {
+
     e.preventDefault();
     const id = document.getElementById('editTodoId').value;
     const updatedTodo = {
@@ -193,7 +200,8 @@ document.getElementById('editTodoForm')?.addEventListener('submit', (e) => {
     };
     editTodo(id, updatedTodo);
     document.getElementById('editTodoForm').style.display = 'none';
-});
+}
+);
 
 // Fonction pour basculer le statut d'une todo
 async function toggleTodoStatus(todo) {
@@ -213,9 +221,23 @@ async function toggleTodoStatus(todo) {
     }
 }
 
+// Gestion de l'affichage des todos terminé ou non
+function filterTodos(filterType) {
+    const allTodos = document.querySelectorAll('#todoList li');
+    allTodos.forEach(todo => {
+        const isCompleted = todo.style.textDecoration === 'line-through';
+        if (filterType === 'completed' && !isCompleted) todo.style.display = 'none';
+        else if (filterType === 'notCompleted' && isCompleted) todo.style.display = 'none';
+        else todo.style.display = 'block';
+    });
+}
+
+
 // Déconnexion
 document.getElementById('logoutButton')?.addEventListener('click', () => {
     localStorage.removeItem('userId');
+    localStorage.removeItem('token');
+    localStorage.clear();
     window.location.href = '/login.html';
 });
 
